@@ -19,8 +19,8 @@
     },
     {
        "type": "font",
-       "defName": "FONT_DEJAVU_SANS_10",
-       "file": "fonts/DejaVuSans.ttf"
+       "defName": "FONT_WEATHER_24",
+       "file": "fonts/weathericons.ttf"
     },
     {
        "type": "font",

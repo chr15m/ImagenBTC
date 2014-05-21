@@ -28,6 +28,10 @@ TextLayer date_layer;
 GFont date_font;
 static char date_text[] = "          ";
 
+TextLayer weather_layer;
+GFont weather_font;
+static char weather_text[] = "     ";
+
 const GPathInfo MINUTE_HAND_PATH_POINTS = {
 	4,
 	(GPoint []) {
@@ -182,9 +186,14 @@ void draw_date(){
 	text_layer_set_text(&date_layer, date_text);
 }
 
+void draw_weather() {
+	strcpy(weather_text, "");
+	text_layer_set_text(&weather_layer, weather_text);
+}
+
 void handle_init(AppContextRef ctx) {
 	(void)ctx;
-
+	
 	window_init(&window, "Milano Watch");
 	window_stack_push(&window, true /* Animated */);
 
@@ -198,7 +207,7 @@ void handle_init(AppContextRef ctx) {
 
 
 	date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_10));
-	text_layer_init(&date_layer, GRect(32, 144, 80, 20));
+	text_layer_init(&date_layer, GRect(32, 140, 80, 20));
 	text_layer_set_text_alignment(&date_layer, GTextAlignmentCenter);
 #if INVERTED
 	text_layer_set_text_color(&date_layer, GColorBlack);
@@ -209,6 +218,19 @@ void handle_init(AppContextRef ctx) {
 	text_layer_set_font(&date_layer, date_font);
 	layer_add_child(&window.layer, &date_layer.layer);
 	draw_date();
+
+	weather_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_WEATHER_24));
+	text_layer_init(&weather_layer, GRect(32, 95, 80, 32));
+	text_layer_set_text_alignment(&weather_layer, GTextAlignmentCenter);
+#if INVERTED
+	text_layer_set_text_color(&weather_layer, GColorBlack);
+#else
+	text_layer_set_text_color(&weather_layer, GColorWhite);
+#endif
+	text_layer_set_background_color(&weather_layer, GColorClear);
+	text_layer_set_font(&weather_layer, weather_font);
+	layer_add_child(&window.layer, &weather_layer.layer);
+	draw_weather();
 
 	layer_init(&hour_display_layer, window.layer.frame);
 	hour_display_layer.update_proc = &hour_display_layer_update_callback;
@@ -251,19 +273,20 @@ void handle_tick(AppContextRef ctx, PebbleTickEvent *t){
 		 {
 				if(t->tick_time->tm_min%2==0)
 				{
-					 layer_mark_dirty(&hour_display_layer);
-					 if(t->tick_time->tm_min==0&&t->tick_time->tm_hour==0)
-					 {
+					layer_mark_dirty(&hour_display_layer);
+					if(t->tick_time->tm_min==0&&t->tick_time->tm_hour==0)
+					{
 							draw_date();
-					 }
+					}
+					
+					if(t->tick_time->tm_min==0) {
+						draw_weather();
 #if HOUR_VIBRATION
-					 if(t->tick_time->tm_min==0 &&
-								 t->tick_time->tm_hour>=HOUR_VIBRATION_START &&
-										t->tick_time->tm_hour<=HOUR_VIBRATION_END)
-					 {
+						if (t->tick_time->tm_hour>=HOUR_VIBRATION_START && t->tick_time->tm_hour<=HOUR_VIBRATION_END) {
 							vibes_double_pulse();
-					 }
+						}
 #endif
+					}
 				}
 		 }
 	}
