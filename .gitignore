@@ -1,0 +1,17 @@
+.*.swp
+.*.swo
+.lock*
+.waf*
+error.log
+build
+include
+lib
+pebble_app.ld
+resources/wscript
+tools
+waf
+wscript
+mailboxes.conf
+server/top.txt
+server/bottom.txt
+server/mail.txt

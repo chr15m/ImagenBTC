@@ -1,0 +1,31 @@
+
+{"friendlyVersion": "VERSION",
+ "versionDefName": "APP_RESOURCES",
+ "media": [
+	   {
+      "type":"png",
+      "defName":"IMAGE_BACKGROUND",
+      "file":"images/milano_background.png"
+    },
+    {
+      "type":"png",
+      "defName":"IMAGE_BACKGROUND_INVERTED",
+      "file":"images/milano_background_inverted.png"
+    },
+    {
+      "type":"png",
+      "defName":"IMAGE_MENU_ICON",
+      "file":"images/milano_logo.png"
+    },
+    {
+       "type": "font",
+       "defName": "FONT_DEJAVU_SANS_10",
+       "file": "fonts/DejaVuSans.ttf"
+    },
+    {
+       "type": "font",
+       "defName": "FONT_SNAP_10",
+       "file": "fonts/snap.ttf"
+    }
+    ]
+}
