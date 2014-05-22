@@ -32,6 +32,10 @@ TextLayer weather_layer;
 GFont weather_font;
 static char weather_text[] = "     ";
 
+TextLayer temperature_layer;
+GFont temperature_font;
+static char temperature_text[] = "     ";
+
 const GPathInfo MINUTE_HAND_PATH_POINTS = {
 	4,
 	(GPoint []) {
@@ -189,6 +193,8 @@ void draw_date(){
 void draw_weather() {
 	strcpy(weather_text, "");
 	text_layer_set_text(&weather_layer, weather_text);
+	strcpy(temperature_text, "21°");
+	text_layer_set_text(&temperature_layer, temperature_text);
 }
 
 void handle_init(AppContextRef ctx) {
@@ -220,7 +226,7 @@ void handle_init(AppContextRef ctx) {
 	draw_date();
 
 	weather_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_WEATHER_24));
-	text_layer_init(&weather_layer, GRect(32, 95, 80, 32));
+	text_layer_init(&weather_layer, GRect(15, 100, 80, 32));
 	text_layer_set_text_alignment(&weather_layer, GTextAlignmentCenter);
 #if INVERTED
 	text_layer_set_text_color(&weather_layer, GColorBlack);
@@ -230,6 +236,21 @@ void handle_init(AppContextRef ctx) {
 	text_layer_set_background_color(&weather_layer, GColorClear);
 	text_layer_set_font(&weather_layer, weather_font);
 	layer_add_child(&window.layer, &weather_layer.layer);
+
+
+	temperature_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_20));
+	text_layer_init(&temperature_layer, GRect(57, 102, 80, 32));
+	text_layer_set_text_alignment(&temperature_layer, GTextAlignmentCenter);
+#if INVERTED
+	text_layer_set_text_color(&temperature_layer, GColorBlack);
+#else
+	text_layer_set_text_color(&temperature_layer, GColorWhite);
+#endif
+	text_layer_set_background_color(&temperature_layer, GColorClear);
+	text_layer_set_font(&temperature_layer, temperature_font);
+	layer_add_child(&window.layer, &temperature_layer.layer);
+	
+	// draw both of the above for the first time
 	draw_weather();
 
 	layer_init(&hour_display_layer, window.layer.frame);
