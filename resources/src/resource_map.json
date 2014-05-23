@@ -24,12 +24,7 @@
     },
     {
        "type": "font",
-       "defName": "FONT_SNAP_10",
-       "file": "fonts/snap.ttf"
-    },
-    {
-       "type": "font",
-       "defName": "FONT_SNAP_20",
+       "defName": "FONT_SNAP_12",
        "file": "fonts/snap.ttf"
     }
     ]

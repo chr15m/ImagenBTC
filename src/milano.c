@@ -24,6 +24,14 @@ Layer center_display_layer;
 Layer second_display_layer;
 #endif
 
+TextLayer info_layer;
+GFont info_font;
+static char info_text[] = "             ";
+
+TextLayer location_layer;
+GFont location_font;
+static char location_text[] = "pebble             ";
+
 TextLayer date_layer;
 GFont date_font;
 static char date_text[] = "          ";
@@ -197,6 +205,16 @@ void draw_weather() {
 	text_layer_set_text(&temperature_layer, temperature_text);
 }
 
+void draw_location() {
+	strcpy(location_text, "venezia");
+	text_layer_set_text(&location_layer, location_text);
+}
+
+void draw_info() {
+	strcpy(info_text, "523");
+	text_layer_set_text(&info_layer, info_text);
+}
+
 void handle_init(AppContextRef ctx) {
 	(void)ctx;
 	
@@ -212,8 +230,8 @@ void handle_init(AppContextRef ctx) {
 	layer_add_child(&window.layer, &background_image_container.layer.layer);
 
 
-	date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_10));
-	text_layer_init(&date_layer, GRect(32, 140, 80, 20));
+	date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_12));
+	text_layer_init(&date_layer, GRect(32, 138, 80, 20));
 	text_layer_set_text_alignment(&date_layer, GTextAlignmentCenter);
 #if INVERTED
 	text_layer_set_text_color(&date_layer, GColorBlack);
@@ -225,8 +243,21 @@ void handle_init(AppContextRef ctx) {
 	layer_add_child(&window.layer, &date_layer.layer);
 	draw_date();
 
+	location_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_12));
+	text_layer_init(&location_layer, GRect(32, 35, 80, 32));
+	text_layer_set_text_alignment(&location_layer, GTextAlignmentCenter);
+#if INVERTED
+	text_layer_set_text_color(&location_layer, GColorBlack);
+#else
+	text_layer_set_text_color(&location_layer, GColorWhite);
+#endif
+	text_layer_set_background_color(&location_layer, GColorClear);
+	text_layer_set_font(&location_layer, location_font);
+	layer_add_child(&window.layer, &location_layer.layer);
+	draw_location();
+
 	weather_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_WEATHER_24));
-	text_layer_init(&weather_layer, GRect(15, 100, 80, 32));
+	text_layer_init(&weather_layer, GRect(15, 103, 80, 32));
 	text_layer_set_text_alignment(&weather_layer, GTextAlignmentCenter);
 #if INVERTED
 	text_layer_set_text_color(&weather_layer, GColorBlack);
@@ -237,9 +268,8 @@ void handle_init(AppContextRef ctx) {
 	text_layer_set_font(&weather_layer, weather_font);
 	layer_add_child(&window.layer, &weather_layer.layer);
 
-
-	temperature_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_20));
-	text_layer_init(&temperature_layer, GRect(57, 102, 80, 32));
+	temperature_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
+	text_layer_init(&temperature_layer, GRect(50, 106, 80, 32));
 	text_layer_set_text_alignment(&temperature_layer, GTextAlignmentCenter);
 #if INVERTED
 	text_layer_set_text_color(&temperature_layer, GColorBlack);
@@ -252,6 +282,19 @@ void handle_init(AppContextRef ctx) {
 	
 	// draw both of the above for the first time
 	draw_weather();
+
+	info_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_12));
+	text_layer_init(&info_layer, GRect(32, 55, 80, 32));
+	text_layer_set_text_alignment(&info_layer, GTextAlignmentCenter);
+#if INVERTED
+	text_layer_set_text_color(&info_layer, GColorBlack);
+#else
+	text_layer_set_text_color(&info_layer, GColorWhite);
+#endif
+	text_layer_set_background_color(&info_layer, GColorClear);
+	text_layer_set_font(&info_layer, info_font);
+	layer_add_child(&window.layer, &info_layer.layer);
+	draw_info();
 
 	layer_init(&hour_display_layer, window.layer.frame);
 	hour_display_layer.update_proc = &hour_display_layer_update_callback;
@@ -301,7 +344,9 @@ void handle_tick(AppContextRef ctx, PebbleTickEvent *t){
 					}
 					
 					if(t->tick_time->tm_min==0) {
+						draw_location();
 						draw_weather();
+						draw_info();
 #if HOUR_VIBRATION
 						if (t->tick_time->tm_hour>=HOUR_VIBRATION_START && t->tick_time->tm_hour<=HOUR_VIBRATION_END) {
 							vibes_double_pulse();
