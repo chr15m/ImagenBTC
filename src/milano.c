@@ -201,7 +201,7 @@ void draw_date(){
 void draw_weather() {
 	strcpy(weather_text, "");
 	text_layer_set_text(&weather_layer, weather_text);
-	strcpy(temperature_text, "21°");
+	strcpy(temperature_text, "31°");
 	text_layer_set_text(&temperature_layer, temperature_text);
 }
 
@@ -230,7 +230,7 @@ void handle_init(AppContextRef ctx) {
 	layer_add_child(&window.layer, &background_image_container.layer.layer);
 
 
-	date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_12));
+	date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_10));
 	text_layer_init(&date_layer, GRect(32, 138, 80, 20));
 	text_layer_set_text_alignment(&date_layer, GTextAlignmentCenter);
 #if INVERTED
@@ -243,7 +243,7 @@ void handle_init(AppContextRef ctx) {
 	layer_add_child(&window.layer, &date_layer.layer);
 	draw_date();
 
-	location_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_12));
+	location_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_10));
 	text_layer_init(&location_layer, GRect(32, 35, 80, 32));
 	text_layer_set_text_alignment(&location_layer, GTextAlignmentCenter);
 #if INVERTED
@@ -268,8 +268,14 @@ void handle_init(AppContextRef ctx) {
 	text_layer_set_font(&weather_layer, weather_font);
 	layer_add_child(&window.layer, &weather_layer.layer);
 
-	temperature_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
-	text_layer_init(&temperature_layer, GRect(50, 106, 80, 32));
+	// temperature_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_STRIDER_16));
+	//temperature_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_UNSTEADY_18));
+	// temperature_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_FUTURA_17));
+	//temperature_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_OPENSANS_17));
+	//temperature_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_UMPUSH_18));
+	//temperature_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_NEVIS_18));
+	temperature_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+	text_layer_init(&temperature_layer, GRect(52, 106, 80, 32));
 	text_layer_set_text_alignment(&temperature_layer, GTextAlignmentCenter);
 #if INVERTED
 	text_layer_set_text_color(&temperature_layer, GColorBlack);
@@ -283,7 +289,7 @@ void handle_init(AppContextRef ctx) {
 	// draw both of the above for the first time
 	draw_weather();
 
-	info_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_12));
+	info_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_10));
 	text_layer_init(&info_layer, GRect(32, 55, 80, 32));
 	text_layer_set_text_alignment(&info_layer, GTextAlignmentCenter);
 #if INVERTED

@@ -2,7 +2,7 @@
 {"friendlyVersion": "VERSION",
  "versionDefName": "APP_RESOURCES",
  "media": [
-	   {
+    {
       "type":"png",
       "defName":"IMAGE_BACKGROUND",
       "file":"images/milano_background.png"
@@ -24,7 +24,7 @@
     },
     {
        "type": "font",
-       "defName": "FONT_SNAP_12",
+       "defName": "FONT_SNAP_10",
        "file": "fonts/snap.ttf"
     }
     ]
