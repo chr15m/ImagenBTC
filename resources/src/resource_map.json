@@ -5,17 +5,17 @@
     {
       "type":"png",
       "defName":"IMAGE_BACKGROUND",
-      "file":"images/milano_background.png"
+      "file":"images/torino_background.png"
     },
     {
       "type":"png",
       "defName":"IMAGE_BACKGROUND_INVERTED",
-      "file":"images/milano_background_inverted.png"
+      "file":"images/torino_background_inverted.png"
     },
     {
       "type":"png",
       "defName":"IMAGE_MENU_ICON",
-      "file":"images/milano_logo.png"
+      "file":"images/torino_logo.png"
     },
     {
        "type": "font",

@@ -5,7 +5,7 @@
 
 #define MY_UUID { 0x4F, 0x4E, 0xEE, 0xFA, 0x16, 0xB0, 0x46, 0xFE, 0x82, 0x1E, 0xDC, 0xCF, 0xB5, 0xD2, 0x27, 0x23 }
 PBL_APP_INFO(MY_UUID,
-						 "Milano", "Chris McCormick",
+						 "Torino", "Chris McCormick",
 						 1, 0, /* App version */
 						 RESOURCE_ID_IMAGE_MENU_ICON,
 						 APP_INFO_WATCH_FACE);
