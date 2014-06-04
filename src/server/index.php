@@ -62,6 +62,7 @@ $weather = process_weather($json_curr, $icons);
 $loc_url = "http://open.mapquestapi.com/nominatim/v1/search?q=$lat,$lon&format=json&addressdetails=1";
 $loc_raw = curl_get($loc_url);
 $json_loc = json_decode($loc_raw);
+// print_r($json_loc);
 // if (!$json_loc) throw_error("Bad mapquest address.");
 
 /** Uncomment to get approx 3 hours ahead forecast **/
@@ -76,7 +77,12 @@ $json_loc = json_decode($loc_raw);
 }*/
 
 // add current locale and custom server message
-$weather[3] = $json_loc[0]->address->city;
+foreach (Array("city", "village", "county", "state", "country") as $address_key) {
+	if (array_key_exists($address_key, $json_loc[0]->address)) {
+		$weather[3] = $json_loc[0]->address->{$address_key};
+		break;
+	}
+}
 $weather[4] = file_get_contents("message.txt");
 if ($weather[4] === false) {
 	$weather[4] = "";
