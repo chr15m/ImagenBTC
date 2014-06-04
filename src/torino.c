@@ -1,18 +1,46 @@
 #include "pebble_os.h"
 #include "pebble_app.h"
 #include "pebble_fonts.h"
-
+#include "util.h"
+#include "http.h"
 
 #define MY_UUID { 0x4F, 0x4E, 0xEE, 0xFA, 0x16, 0xB0, 0x46, 0xFE, 0x82, 0x1E, 0xDC, 0xCF, 0xB5, 0xD2, 0x27, 0x23 }
 PBL_APP_INFO(MY_UUID,
-						 "Torino", "Chris McCormick",
-						 1, 0, /* App version */
-						 RESOURCE_ID_IMAGE_MENU_ICON,
-						 APP_INFO_WATCH_FACE);
+	"Torino", "Chris McCormick",
+	1, 0, /* App version */
+	RESOURCE_ID_IMAGE_MENU_ICON,
+	APP_INFO_WATCH_FACE);
 
 #include "build_config.h"
 #define HOUR_VIBRATION_START 8
 #define HOUR_VIBRATION_END 22
+
+/***** weather stuff *****/
+
+// POST variables
+#define WEATHER_KEY_LATITUDE 1
+#define WEATHER_KEY_LONGITUDE 2
+#define WEATHER_KEY_UNIT_SYSTEM 3
+
+// Received variables
+#define WEATHER_KEY_ICON 1
+#define WEATHER_KEY_TEMPERATURE 2
+#define WEATHER_KEY_CITYNAME 3
+#define INFO_KEY_MESSAGE 4
+#define INFO_KEY_ERROR 5
+
+#define WEATHER_HTTP_COOKIE 1949327673
+
+static int our_latitude, our_longitude;
+static bool located;
+
+/*void request_weather();
+void handle_timer(AppContextRef app_ctx, AppTimerHandle handle, uint32_t cookie);
+void failed(int32_t cookie, int http_status, void* context);
+void success(int32_t cookie, int http_status, DictionaryIterator* received, void* context);
+void reconnect(void* context);*/
+
+/***** everything else *****/
 
 Window window;
 BmpContainer background_image_container;
@@ -198,28 +226,134 @@ void draw_date(){
 	text_layer_set_text(&date_layer, date_text);
 }
 
-void draw_weather() {
-	strcpy(weather_text, "");
+void draw_weather(char *icon, int temperature) {
+	// strcpy(weather_text, "");
+	strcpy(weather_text, icon);
 	text_layer_set_text(&weather_layer, weather_text);
-	strcpy(temperature_text, "31°");
+	// strcpy(temperature_text, "31°");
+	// strcpy(temperature_text, temperature);
+	if (temperature != -127) {
+		// sprintf(temperature_text, "%d°", temperature);
+		strcpy(temperature_text, itoa(temperature));
+		strcat(temperature_text, "°");
+	} else {
+		strcpy(temperature_text, "");
+	}
 	text_layer_set_text(&temperature_layer, temperature_text);
 }
 
-void draw_location() {
-	strcpy(location_text, "venezia");
+void draw_location(char *location) {
+	strcpy(location_text, location);
 	text_layer_set_text(&location_layer, location_text);
 }
 
-void draw_info() {
-	strcpy(info_text, "523");
+void draw_info(char *info) {
+	strcpy(info_text, info);
 	text_layer_set_text(&info_layer, info_text);
 }
 
-void handle_init(AppContextRef ctx) {
-	(void)ctx;
+void clear() {
+	// clear to base view
+	strcpy(location_text, "pebble");
+	text_layer_set_text(&location_layer, location_text);
+	strcpy(weather_text, "");
+	text_layer_set_text(&weather_layer, weather_text);
+	strcpy(temperature_text, "");
+	text_layer_set_text(&temperature_layer, temperature_text);
+	strcpy(info_text, "");
+	text_layer_set_text(&info_layer, info_text);
+}
+
+void set_timer(AppContextRef ctx) {
+	app_timer_send_event(ctx, 1740000, 1);
+}
+
+/***** HTTP stuff *****/
+
+void request_weather() {
+	if(!located) {
+		// draw_info("request loc");
+		http_location_request();
+		return;
+	}
+	// Build the HTTP request
+	DictionaryIterator *body;
+	HTTPResult result = http_out_get(URL, WEATHER_HTTP_COOKIE, &body);
+	if(result != HTTP_OK) {
+		// draw_info("!HTTP_OK");
+		// weather_layer_set_icon(&weather_layer, WEATHER_ICON_NO_WEATHER);
+		//clear();
+		draw_info("");
+		return;
+	}
+	dict_write_int32(body, WEATHER_KEY_LATITUDE, our_latitude);
+	dict_write_int32(body, WEATHER_KEY_LONGITUDE, our_longitude);
+	dict_write_cstring(body, WEATHER_KEY_UNIT_SYSTEM, TEMPERATURE_UNIT);
+	// Send it.
+	if(http_out_send() != HTTP_OK) {
+		// draw_info("!HTTP_OK2");
+		// weather_layer_set_icon(&weather_layer, WEATHER_ICON_NO_WEATHER);
+		//clear();
+		draw_info("");
+		return;
+	}
+}
+
+void location(float latitude, float longitude, float altitude, float accuracy, void* context) {
+	// draw_info("location");
+	// draw_info(itoa(latitude * 10000));
+	// Fix the floats
+	our_latitude = latitude * 10000;
+	our_longitude = longitude * 10000;
+	located = true;
+	request_weather();
+	set_timer((AppContextRef)context);
+}
+
+void failed(int32_t cookie, int http_status, void* context) {
+	if(cookie == 0 || cookie == WEATHER_HTTP_COOKIE) {
+		// weather_layer_set_icon(&weather_layer, WEATHER_ICON_NO_WEATHER);
+		// clear();
+		// draw_info("failed");
+	}
+}
+
+void success(int32_t cookie, int http_status, DictionaryIterator* received, void* context) {
+	if(cookie != WEATHER_HTTP_COOKIE) return;
 	
+	Tuple* message_tuple = dict_find(received, INFO_KEY_MESSAGE);
+	if (message_tuple) {
+		draw_info(message_tuple->value->cstring);
+	}
+	
+	Tuple* cityname_tuple = dict_find(received, WEATHER_KEY_CITYNAME);
+	if (cityname_tuple) {
+		draw_location(cityname_tuple->value->cstring);
+	}
+	
+	Tuple* icon_tuple = dict_find(received, WEATHER_KEY_ICON);
+	Tuple* temperature_tuple = dict_find(received, WEATHER_KEY_TEMPERATURE);
+	if (icon_tuple && temperature_tuple) {
+		draw_weather(icon_tuple->value->cstring, temperature_tuple->value->int16);
+	}
+}
+
+void reconnect(void* context) {
+	// draw_info("reconnected");
+	request_weather();
+}
+
+void handle_timer(AppContextRef ctx, AppTimerHandle handle, uint32_t cookie) {
+	request_weather();
+	// Update again in fifteen minutes.
+	if(cookie)
+		set_timer(ctx);
+}
+
+void handle_init(AppContextRef ctx) {
 	window_init(&window, "Milano Watch");
 	window_stack_push(&window, true /* Animated */);
+	window_set_fullscreen(&window, true);
 
 	resource_init_current_app(&APP_RESOURCES);
 #if INVERTED
@@ -244,7 +378,7 @@ void handle_init(AppContextRef ctx) {
 	draw_date();
 
 	location_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_10));
-	text_layer_init(&location_layer, GRect(32, 35, 80, 32));
+	text_layer_init(&location_layer, GRect(32, 15, 80, 32));
 	text_layer_set_text_alignment(&location_layer, GTextAlignmentCenter);
 #if INVERTED
 	text_layer_set_text_color(&location_layer, GColorBlack);
@@ -254,10 +388,10 @@ void handle_init(AppContextRef ctx) {
 	text_layer_set_background_color(&location_layer, GColorClear);
 	text_layer_set_font(&location_layer, location_font);
 	layer_add_child(&window.layer, &location_layer.layer);
-	draw_location();
+	draw_location("pebble");
 
 	weather_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_WEATHER_24));
-	text_layer_init(&weather_layer, GRect(15, 103, 80, 32));
+	text_layer_init(&weather_layer, GRect(15, 110, 80, 32));
 	text_layer_set_text_alignment(&weather_layer, GTextAlignmentCenter);
 #if INVERTED
 	text_layer_set_text_color(&weather_layer, GColorBlack);
@@ -275,7 +409,7 @@ void handle_init(AppContextRef ctx) {
 	//temperature_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_UMPUSH_18));
 	//temperature_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_NEVIS_18));
 	temperature_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
-	text_layer_init(&temperature_layer, GRect(52, 106, 80, 32));
+	text_layer_init(&temperature_layer, GRect(52, 113, 80, 32));
 	text_layer_set_text_alignment(&temperature_layer, GTextAlignmentCenter);
 #if INVERTED
 	text_layer_set_text_color(&temperature_layer, GColorBlack);
@@ -287,10 +421,10 @@ void handle_init(AppContextRef ctx) {
 	layer_add_child(&window.layer, &temperature_layer.layer);
 	
 	// draw both of the above for the first time
-	draw_weather();
+	draw_weather("", -127);
 
-	info_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_10));
-	text_layer_init(&info_layer, GRect(32, 55, 80, 32));
+	info_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
+	text_layer_init(&info_layer, GRect(32, 40, 80, 32));
 	text_layer_set_text_alignment(&info_layer, GTextAlignmentCenter);
 #if INVERTED
 	text_layer_set_text_color(&info_layer, GColorBlack);
@@ -300,7 +434,7 @@ void handle_init(AppContextRef ctx) {
 	text_layer_set_background_color(&info_layer, GColorClear);
 	text_layer_set_font(&info_layer, info_font);
 	layer_add_child(&window.layer, &info_layer.layer);
-	draw_info();
+	draw_info("");
 
 	layer_init(&hour_display_layer, window.layer.frame);
 	hour_display_layer.update_proc = &hour_display_layer_update_callback;
@@ -323,6 +457,17 @@ void handle_init(AppContextRef ctx) {
 	second_display_layer.update_proc = &second_display_layer_update_callback;
 	layer_add_child(&window.layer, &second_display_layer);
 #endif
+
+	http_register_callbacks((HTTPCallbacks){
+		.failure=failed,
+		.success=success,
+		.reconnect=reconnect,
+		.location=location
+	}, (void*)ctx);
+	
+	// Request weather
+	located = false;
+	request_weather();
 }
 
 void handle_deinit(AppContextRef ctx) {
@@ -330,6 +475,8 @@ void handle_deinit(AppContextRef ctx) {
 
 	bmp_deinit_container(&background_image_container);
 	fonts_unload_custom_font(date_font);
+	fonts_unload_custom_font(location_font);
+	fonts_unload_custom_font(weather_font);
 }
 
 void handle_tick(AppContextRef ctx, PebbleTickEvent *t){
@@ -350,9 +497,9 @@ void handle_tick(AppContextRef ctx, PebbleTickEvent *t){
 					}
 					
 					if(t->tick_time->tm_min==0) {
-						draw_location();
-						draw_weather();
-						draw_info();
+						// draw_location();
+						// draw_weather();
+						// draw_info();
 #if HOUR_VIBRATION
 						if (t->tick_time->tm_hour>=HOUR_VIBRATION_START && t->tick_time->tm_hour<=HOUR_VIBRATION_END) {
 							vibes_double_pulse();
@@ -379,7 +526,15 @@ void pbl_main(void *params) {
 #else
 			.tick_units = MINUTE_UNIT
 #endif
+		},
+		.timer_handler = handle_timer,
+		.messaging_info = {
+			.buffer_sizes = {
+				.inbound = 124,
+				.outbound = 256,
+			}
 		}
 	};
 	app_event_loop(params, &handlers);
 }
+
