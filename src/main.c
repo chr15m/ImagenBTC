@@ -265,7 +265,7 @@ void clear() {
 }
 
 void set_timer(AppContextRef ctx) {
-	app_timer_send_event(ctx, 1740000, 1);
+	app_timer_send_event(ctx, 420000, 1);
 }
 
 /***** HTTP stuff *****/
