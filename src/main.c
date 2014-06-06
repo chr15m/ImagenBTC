@@ -307,7 +307,6 @@ void location(float latitude, float longitude, float altitude, float accuracy, v
 	our_longitude = longitude * 10000;
 	located = true;
 	request_weather();
-	set_timer((AppContextRef)context);
 }
 
 void failed(int32_t cookie, int http_status, void* context) {
@@ -345,8 +344,8 @@ void reconnect(void* context) {
 
 void handle_timer(AppContextRef ctx, AppTimerHandle handle, uint32_t cookie) {
 	request_weather();
-	// Update again in fifteen minutes.
-	if(cookie)
+	// Update again in seven minutes.
+	if (cookie)
 		set_timer(ctx);
 }
 
@@ -465,8 +464,11 @@ void handle_init(AppContextRef ctx) {
 		.location=location
 	}, (void*)ctx);
 	
-	// Request weather
+	// start us off with a location poll
 	located = false;
+	// set up our timer to check the weather every fifteen minutes
+	set_timer((AppContextRef)ctx);
+	// initiate the first weather request
 	request_weather();
 }
 
@@ -497,14 +499,16 @@ void handle_tick(AppContextRef ctx, PebbleTickEvent *t){
 					}
 					
 					if(t->tick_time->tm_min==0) {
-						// draw_location();
-						// draw_weather();
-						// draw_info();
 #if HOUR_VIBRATION
 						if (t->tick_time->tm_hour>=HOUR_VIBRATION_START && t->tick_time->tm_hour<=HOUR_VIBRATION_END) {
 							vibes_double_pulse();
 						}
 #endif
+					}
+					
+					if (t->tick_time->tm_min%20==0) {
+						// poll our current location every 20 minutes
+						located = false;
 					}
 				}
 		 }
