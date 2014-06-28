@@ -1,9 +1,14 @@
 <?php
-header('Content-Type: text/plain; charset=utf-8');
+$DEBUG=$_GET["DEBUG"];
 
-//error_reporting(-1);
-//ini_set('display_errors', 'On');
-// print_r($_GET);
+if ($DEBUG) {
+	echo "<!DOCTYPE html><html><meta charset='utf-8'><link rel='stylesheet' type='text/css' href='weather-icons/css/weather-icons.min.css'></head><body class='wi'>";
+	error_reporting(-1);
+	ini_set('display_errors', 'On');
+	// print_r($_GET);
+} else {
+	header('Content-Type: text/plain; charset=utf-8');
+}
 
 function throw_error($msg) {
 	die('{5:"' . $msg . '"}');
@@ -57,7 +62,7 @@ if(!$payload) {
 $current_url = 'http://api.openweathermap.org/data/2.5/weather?lat='.$lat.'&lon='.$lon.'&units='.$unt;
 $json_curr = curl_get($current_url);
 // if (!$json_curr) throw_error("Bad openweathermap result.");
-$weather = process_weather($json_curr, $icons);
+$weather = process_weather($json_curr, $icons, $DEBUG);
 
 $loc_url = "http://open.mapquestapi.com/nominatim/v1/search?q=$lat,$lon&format=json&addressdetails=1";
 $loc_raw = curl_get($loc_url);
@@ -107,7 +112,7 @@ function curl_get($url){
 	return $output;
 }
 
-function process_weather($json_curr, $icons) {
+function process_weather($json_curr, $icons, $DEBUG) {
 	$json_output = json_decode($json_curr);
 	if (!$json_output) {
 		$weather = "";
@@ -127,6 +132,12 @@ function process_weather($json_curr, $icons) {
 	//$temp_min	= $day->min;
 	//$temp_max	= $day->max;
 
+	// log_error("Weather Icon:" . $icon);
+	if ($DEBUG) {
+		echo $icon . "<br/>";
+		echo $icons[$icon] . "<br/>";
+	}
+	
 	$result	= array();
 	$result[1] = html_entity_decode($icons[$icon], 0, 'UTF-8');
 	$result[2] = array('I', round($temp, 0));
@@ -135,4 +146,7 @@ function process_weather($json_curr, $icons) {
 	return $result;
 }
 
+if ($DEBUG) {
+	echo "</body></html>";
+}
 ?>
