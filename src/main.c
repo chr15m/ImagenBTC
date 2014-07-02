@@ -58,7 +58,7 @@ static char info_text[] = "             ";
 
 TextLayer location_layer;
 GFont location_font;
-static char location_text[] = "pebble             ";
+static char location_text[] = "pebble                                  ";
 
 TextLayer date_layer;
 GFont date_font;
