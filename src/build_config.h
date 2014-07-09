@@ -4,3 +4,4 @@
 #define INVERTED false
 #define TEMPERATURE_UNIT "metric"
 #define URL "http://mccormick.cx/torino/"
+#define DEBUG 0

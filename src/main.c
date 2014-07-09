@@ -283,7 +283,9 @@ void request_weather() {
 		// draw_info("!HTTP_OK");
 		// weather_layer_set_icon(&weather_layer, WEATHER_ICON_NO_WEATHER);
 		//clear();
-		draw_info("");
+		#if DEBUG
+		draw_info("HTTP setup failed");
+		#endif
 		return;
 	}
 	dict_write_int32(body, WEATHER_KEY_LATITUDE, our_latitude);
@@ -294,7 +296,9 @@ void request_weather() {
 		// draw_info("!HTTP_OK2");
 		// weather_layer_set_icon(&weather_layer, WEATHER_ICON_NO_WEATHER);
 		//clear();
-		draw_info("");
+		#if DEBUG
+		draw_info("HTTP send failed");
+		#endif
 		return;
 	}
 }
@@ -310,15 +314,30 @@ void location(float latitude, float longitude, float altitude, float accuracy, v
 }
 
 void failed(int32_t cookie, int http_status, void* context) {
-	if(cookie == 0 || cookie == WEATHER_HTTP_COOKIE) {
+	if (cookie == 0) {
+		#if DEBUG
+		draw_info("HTTP fail 0 cookie");
+		#endif
+	}
+	if (cookie == WEATHER_HTTP_COOKIE) {
 		// weather_layer_set_icon(&weather_layer, WEATHER_ICON_NO_WEATHER);
 		// clear();
-		// draw_info("failed");
+		#if DEBUG
+		draw_info("HTTP fail weather");
+		#endif
 	}
 }
 
 void success(int32_t cookie, int http_status, DictionaryIterator* received, void* context) {
-	if(cookie != WEATHER_HTTP_COOKIE) return;
+	#if DEBUG
+	draw_info("HTTP success");
+	#endif
+	if(cookie != WEATHER_HTTP_COOKIE) {
+		#if DEBUG
+		draw_info("wrong cookie");
+		#endif
+		return;
+	}
 	
 	Tuple* message_tuple = dict_find(received, INFO_KEY_MESSAGE);
 	if (message_tuple) {
