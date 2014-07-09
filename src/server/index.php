@@ -140,7 +140,7 @@ function process_weather($json_curr, $icons, $DEBUG) {
 	
 	$result	= array();
 	$result[1] = html_entity_decode($icons[$icon], 0, 'UTF-8');
-	$result[2] = array('I', round($temp, 0));
+	$result[2] = array('b', round($temp, 0));
 	// $result[3] = array('I', round($temp_min, 0));
 	// $result[4] = array('I', round($temp_max, 0));
 	return $result;
