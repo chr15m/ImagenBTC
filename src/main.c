@@ -352,7 +352,7 @@ void success(int32_t cookie, int http_status, DictionaryIterator* received, void
 	Tuple* icon_tuple = dict_find(received, WEATHER_KEY_ICON);
 	Tuple* temperature_tuple = dict_find(received, WEATHER_KEY_TEMPERATURE);
 	if (icon_tuple && temperature_tuple) {
-		draw_weather(icon_tuple->value->cstring, temperature_tuple->value->int16);
+		draw_weather(icon_tuple->value->cstring, temperature_tuple->value->int8);
 	}
 }
 
@@ -409,7 +409,7 @@ void handle_init(AppContextRef ctx) {
 	draw_location("pebble");
 
 	weather_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_WEATHER_24));
-	text_layer_init(&weather_layer, GRect(15, 110, 80, 32));
+	text_layer_init(&weather_layer, GRect(15, 107, 80, 32));
 	text_layer_set_text_alignment(&weather_layer, GTextAlignmentCenter);
 #if INVERTED
 	text_layer_set_text_color(&weather_layer, GColorBlack);
@@ -427,7 +427,7 @@ void handle_init(AppContextRef ctx) {
 	//temperature_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_UMPUSH_18));
 	//temperature_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_NEVIS_18));
 	temperature_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
-	text_layer_init(&temperature_layer, GRect(52, 113, 80, 32));
+	text_layer_init(&temperature_layer, GRect(52, 110, 80, 32));
 	text_layer_set_text_alignment(&temperature_layer, GTextAlignmentCenter);
 #if INVERTED
 	text_layer_set_text_color(&temperature_layer, GColorBlack);
@@ -442,7 +442,7 @@ void handle_init(AppContextRef ctx) {
 	draw_weather("", -127);
 
 	info_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
-	text_layer_init(&info_layer, GRect(32, 40, 80, 32));
+	text_layer_init(&info_layer, GRect(32, 44, 80, 32));
 	text_layer_set_text_alignment(&info_layer, GTextAlignmentCenter);
 #if INVERTED
 	text_layer_set_text_color(&info_layer, GColorBlack);
