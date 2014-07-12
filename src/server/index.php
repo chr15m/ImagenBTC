@@ -15,25 +15,25 @@ function throw_error($msg) {
 }
 
 $icons = Array(
-	"01d" => "&#xf00d;", // "sky is clear",
-	"02d" => "&#xf00c;", // "few clouds",
-	"03d" => "&#xf002;", // "scattered clouds",
-	"04d" => "&#xf013;", // "broken clouds",
-	"09d" => "&#xf009;", // "shower rain",
-	"10d" => "&#xf008;", // "rain",
-	"11d" => "&#xf01d;", // "thunderstorm",
-	"13d" => "&#xf01b;", // "snow",
-	"50d" => "&#xf014;", // "mist",
+	"01d" => 0xf00d, // "sky is clear",
+	"02d" => 0xf00c, // "few clouds",
+	"03d" => 0xf002, // "scattered clouds",
+	"04d" => 0xf013, // "broken clouds",
+	"09d" => 0xf018, // "shower rain",
+	"10d" => 0xf019, // "rain",
+	"11d" => 0xf01d, // "thunderstorm",
+	"13d" => 0xf01b, // "snow",
+	"50d" => 0xf014, // "mist",
 	
-	"01n" => "&#xf02e;", // "sky is clear - night",
-	"02n" => "&#xf031;", // "few clouds - night",
-	"03n" => "&#xf031;", // "scattered clouds - night",
-	"04n" => "&#xf013;", // "broken clouds - night",
-	"09n" => "&#xf029;", // "shower rain - night",
-	"10n" => "&#xf028;", // "rain - night",
-	"11n" => "&#xf02c;", // "thunderstorm - night",
-	"13n" => "&#xf01b;", // "snow - night",
-	"50n" => "&#xf04a;", // "mist - night",
+	"01n" => 0xf02e, // "sky is clear - night",
+	"02n" => 0xf031, // "few clouds - night",
+	"03n" => 0xf031, // "scattered clouds - night",
+	"04n" => 0xf013, // "broken clouds - night",
+	"09n" => 0xf029, // "shower rain - night",
+	"10n" => 0xf028, // "rain - night",
+	"11n" => 0xf02c, // "thunderstorm - night",
+	"13n" => 0xf01b, // "snow - night",
+	"50n" => 0xf04a, // "mist - night",
 	
 	"" => ""
 );
@@ -96,6 +96,9 @@ if ($weather[4] === false) {
 // HTTP response
 print json_encode($weather, JSON_UNESCAPED_UNICODE);
 
+// make a record of the last weather value requested
+file_put_contents("weather-icon.txt", sprintf("%x\n", $weather[1][1]));
+
 function curl_get($url){
 	if (!function_exists('curl_init')){
 		die('Sorry cURL is not installed!');
@@ -139,8 +142,9 @@ function process_weather($json_curr, $icons, $DEBUG) {
 	}
 	
 	$result	= array();
-	$result[1] = html_entity_decode($icons[$icon], 0, 'UTF-8');
+	$result[1] = array("I", $icons[$icon]); // html_entity_decode("&#x" . $icons[$icon] . ";", 0, 'UTF-8');
 	$result[2] = array('b', round($temp, 0));
+	// $result[6] = $icons[$icon];
 	// $result[3] = array('I', round($temp_min, 0));
 	// $result[4] = array('I', round($temp_max, 0));
 	return $result;

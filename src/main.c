@@ -226,9 +226,47 @@ void draw_date(){
 	text_layer_set_text(&date_layer, date_text);
 }
 
-void draw_weather(char *icon, int temperature) {
+void draw_weather(uint32_t ch, int temperature) {
 	// strcpy(weather_text, "");
-	strcpy(weather_text, icon);
+	// strcpy(weather_text, icon);
+	// icon = "";
+	/* ch = 0xf031;
+	ch = 0xf00d; // sky is clear
+	ch = 0xf00c; // few clouds
+	ch = 0xf019; // rain
+	ch = 0xf002; // scattered clouds
+	ch = 0xf01d; // thunderstorm
+	ch = 0xf01a; // shower rain
+	ch = 0xf01b; // snow */
+	
+	weather_text[0] = (ch>>12) | 0xE0;
+	weather_text[1] = ((ch>>6) & 0x3F) | 0x80;
+	weather_text[2] = (ch & 0x3F) | 0x80;
+	weather_text[3] = 0;
+
+	/*
+	ch = 51;
+	ch = 52;
+	ch = 45;
+	ch = 43; // break
+	ch = 40; // break
+	ch = 48; // break
+	weather_text[0] = ch;
+	weather_text[1] = 0;
+	*/
+
+	// sprintf(weather_text, "%d", strlen(icon));
+	//for (i=0; i<4; i++) {
+		// strcpy(weather_text, icon);
+		// ((void *)weather_text)[i] = ((void *)icon)[i];
+	//	weather_text[i] = icon[i];
+	//}
+	//weather_text[0] = icon[0];
+	//weather_text[1] = icon[1];
+	//weather_text[2] = 0;
+	// strcpy(weather_text, "");
+	// weather_text = &"";
+	// memcpy(weather_text, icon, 4)
 	text_layer_set_text(&weather_layer, weather_text);
 	// strcpy(temperature_text, "31°");
 	// strcpy(temperature_text, temperature);
@@ -352,7 +390,7 @@ void success(int32_t cookie, int http_status, DictionaryIterator* received, void
 	Tuple* icon_tuple = dict_find(received, WEATHER_KEY_ICON);
 	Tuple* temperature_tuple = dict_find(received, WEATHER_KEY_TEMPERATURE);
 	if (icon_tuple && temperature_tuple) {
-		draw_weather(icon_tuple->value->cstring, temperature_tuple->value->int8);
+		draw_weather(icon_tuple->value->uint32, temperature_tuple->value->int8);
 	}
 }
 
@@ -439,10 +477,10 @@ void handle_init(AppContextRef ctx) {
 	layer_add_child(&window.layer, &temperature_layer.layer);
 	
 	// draw both of the above for the first time
-	draw_weather("", -127);
+	draw_weather(0x20, -127);
 
 	info_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
-	text_layer_init(&info_layer, GRect(32, 44, 80, 32));
+	text_layer_init(&info_layer, GRect(32, 45, 80, 32));
 	text_layer_set_text_alignment(&info_layer, GTextAlignmentCenter);
 #if INVERTED
 	text_layer_set_text_color(&info_layer, GColorBlack);
