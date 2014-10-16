@@ -4,53 +4,28 @@
 #include "util.h"
 #include "http.h"
 
-#define MY_UUID { 0x4F, 0x4E, 0xEE, 0xFA, 0x16, 0xB0, 0x46, 0xFE, 0x82, 0x1E, 0xDC, 0xCF, 0xB5, 0xD2, 0x27, 0x23 }
+#define MY_UUID { 0x4F, 0x4E, 0xEE, 0xFA, 0x16, 0xB0, 0x46, 0xFE, 0x82, 0x1E, 0xDC, 0xCF, 0xB5, 0xD2, 0x23, 0x23 }
 PBL_APP_INFO(MY_UUID,
-	"Torino", "Chris McCormick",
+	"imagen", "Chris McCormick",
 	1, 0, /* App version */
 	RESOURCE_ID_IMAGE_MENU_ICON,
 	APP_INFO_WATCH_FACE);
 
 #include "build_config.h"
-#define HOUR_VIBRATION_START 8
-#define HOUR_VIBRATION_END 22
 
 /***** weather stuff *****/
 
-// POST variables
-#define WEATHER_KEY_LATITUDE 1
-#define WEATHER_KEY_LONGITUDE 2
-#define WEATHER_KEY_UNIT_SYSTEM 3
-
-// Received variables
-#define WEATHER_KEY_ICON 1
-#define WEATHER_KEY_TEMPERATURE 2
-#define WEATHER_KEY_CITYNAME 3
-#define INFO_KEY_MESSAGE 4
-#define INFO_KEY_ERROR 5
-
-#define WEATHER_HTTP_COOKIE 1949327673
+#define BTC_HTTP_COOKIE 1023232323
 
 static int our_latitude, our_longitude;
 static bool located;
-
-/*void request_weather();
-void handle_timer(AppContextRef app_ctx, AppTimerHandle handle, uint32_t cookie);
-void failed(int32_t cookie, int http_status, void* context);
-void success(int32_t cookie, int http_status, DictionaryIterator* received, void* context);
-void reconnect(void* context);*/
 
 /***** everything else *****/
 
 Window window;
 BmpContainer background_image_container;
 
-Layer minute_display_layer;
-Layer hour_display_layer;
 Layer center_display_layer;
-#if DISPLAY_SECONDS
-Layer second_display_layer;
-#endif
 
 TextLayer info_layer;
 GFont info_font;
@@ -63,99 +38,6 @@ static char location_text[] = "pebble                                  ";
 TextLayer date_layer;
 GFont date_font;
 static char date_text[] = "          ";
-
-TextLayer weather_layer;
-GFont weather_font;
-static char weather_text[] = "     ";
-
-TextLayer temperature_layer;
-GFont temperature_font;
-static char temperature_text[] = "     ";
-
-const GPathInfo MINUTE_HAND_PATH_POINTS = {
-	4,
-	(GPoint []) {
-		{-3, 0},
-		{3, 0},
-		{3, -60},
-		{-3,	-60},
-	}
-};
-
-const GPathInfo HOUR_HAND_PATH_POINTS = {
-	4,
-	(GPoint []) {
-		{-3, 0},
-		{3, 0},
-		{3, -40},
-		{-3,	-40},
-	}
-};
-
-GPath hour_hand_path;
-GPath minute_hand_path;
-
-#if DISPLAY_SECONDS && INVERTED
-void second_display_layer_update_callback(Layer *me, GContext* ctx) {
-	(void)me;
-
-	PblTm t;
-	get_time(&t);
-
-	int32_t second_angle = t.tm_sec * (0xffff/60);
-	int32_t counter_second_angle = t.tm_sec * (0xffff/60);
-	if(t.tm_sec<30)
-	{
-		 counter_second_angle += 0xffff/2;
-	}
-	else
-	{
-		 counter_second_angle -= 0xffff/2;
-	}
-	int second_hand_length = 70;
-	int counter_second_hand_length = 15;
-
-	GPoint center = grect_center_point(&me->frame);
-	GPoint counter_second = GPoint(center.x + counter_second_hand_length * sin_lookup(counter_second_angle)/0xffff,
-				center.y + (-counter_second_hand_length) * cos_lookup(counter_second_angle)/0xffff);
-	GPoint second = GPoint(center.x + second_hand_length * sin_lookup(second_angle)/0xffff,
-				center.y + (-second_hand_length) * cos_lookup(second_angle)/0xffff);
-
-	graphics_context_set_stroke_color(ctx, GColorBlack);
-
-	graphics_draw_line(ctx, counter_second, second);
-}
-#elif DISPLAY_SECONDS
-void second_display_layer_update_callback(Layer *me, GContext* ctx) {
-	(void)me;
-
-	PblTm t;
-	get_time(&t);
-
-	int32_t second_angle = t.tm_sec * (0xffff/60);
-	int32_t counter_second_angle = t.tm_sec * (0xffff/60);
-	if(t.tm_sec<30)
-	{
-		 counter_second_angle += 0xffff/2;
-	}
-	else
-	{
-		 counter_second_angle -= 0xffff/2;
-	}
-	int second_hand_length = 70;
-	int counter_second_hand_length = 15;
-
-	GPoint center = grect_center_point(&me->frame);
-	GPoint counter_second = GPoint(center.x + counter_second_hand_length * sin_lookup(counter_second_angle)/0xffff,
-				center.y + (-counter_second_hand_length) * cos_lookup(counter_second_angle)/0xffff);
-	GPoint second = GPoint(center.x + second_hand_length * sin_lookup(second_angle)/0xffff,
-				center.y + (-second_hand_length) * cos_lookup(second_angle)/0xffff);
-
-	graphics_context_set_stroke_color(ctx, GColorWhite);
-
-	graphics_draw_line(ctx, counter_second, second);
-}
-#endif
 
 void center_display_layer_update_callback(Layer *me, GContext* ctx) {
 	(void)me;

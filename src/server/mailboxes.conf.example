@@ -1,6 +1,0 @@
-[home]
-server = home.com
-username = user
-password = pass
-port = 993
-ssl = true

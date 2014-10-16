@@ -5,22 +5,12 @@
     {
       "type":"png",
       "defName":"IMAGE_BACKGROUND",
-      "file":"images/torino_background.png"
-    },
-    {
-      "type":"png",
-      "defName":"IMAGE_BACKGROUND_INVERTED",
-      "file":"images/torino_background_inverted.png"
+      "file":"images/background.png"
     },
     {
       "type":"png",
       "defName":"IMAGE_MENU_ICON",
-      "file":"images/torino_logo.png"
-    },
-    {
-       "type": "font",
-       "defName": "FONT_WEATHER_24",
-       "file": "fonts/weathericons.ttf"
+      "file":"images/logo.png"
     },
     {
        "type": "font",
