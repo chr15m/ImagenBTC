@@ -1,5 +1,9 @@
-Display a single Bitcoin address QR code and total.
+Simple Bitcoin 'wallet' for Pebble watch.
 
-1PBBL4MiCYZGh25BuSQMPZRf4YKaoVQWbt
+SDK version 1. Displays the Bitcoin address/payment QR code and total mBTC.
 
-GPLv3.
+`./use-address.sh YOURADDRESS` and then `./waf build` to compile with your own address.
+
+<bitcoin:1PBBL4MiCYZGh25BuSQMPZRf4YKaoVQWbt>
+
+GPLv3. Copyright Chris McCormick, 2014.
