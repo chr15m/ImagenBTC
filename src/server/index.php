@@ -16,5 +16,5 @@ $json_total = file_get_contents($total_url);
 $total = json_decode($json_total) / 100000.0;
 
 // HTTP response
-echo json_encode(Array("1" => "$total mBTC"), JSON_UNESCAPED_UNICODE);
+echo json_encode(Array("1" => sprintf("%.3f mBTC", $total)), JSON_UNESCAPED_UNICODE);
 ?>
