@@ -138,23 +138,23 @@ void handle_init(AppContextRef ctx) {
 	bmp_init_container(RESOURCE_ID_IMAGE_BACKGROUND, &background_image_container);
 	layer_add_child(&window.layer, &background_image_container.layer.layer);
 
-	date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_10));
-	text_layer_init(&date_layer, GRect(10, 5, 120, 20));
-	text_layer_set_text_alignment(&date_layer, GTextAlignmentCenter);
-	text_layer_set_text_color(&date_layer, GColorBlack);
-	text_layer_set_background_color(&date_layer, GColorClear);
-	text_layer_set_font(&date_layer, date_font);
-	layer_add_child(&window.layer, &date_layer.layer);
-	draw_date();
-
 	info_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_10));
-	text_layer_init(&info_layer, GRect(32, 146, 80, 32));
+	text_layer_init(&info_layer, GRect(32, 5, 80, 32));
 	text_layer_set_text_alignment(&info_layer, GTextAlignmentCenter);
 	text_layer_set_text_color(&info_layer, GColorBlack);
 	text_layer_set_background_color(&info_layer, GColorClear);
 	text_layer_set_font(&info_layer, info_font);
 	layer_add_child(&window.layer, &info_layer.layer);
 	draw_info("pebble");
+
+	date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_10));
+	text_layer_init(&date_layer, GRect(10, 146, 120, 20));
+	text_layer_set_text_alignment(&date_layer, GTextAlignmentCenter);
+	text_layer_set_text_color(&date_layer, GColorBlack);
+	text_layer_set_background_color(&date_layer, GColorClear);
+	text_layer_set_font(&date_layer, date_font);
+	layer_add_child(&window.layer, &date_layer.layer);
+	draw_date();
 
 	http_register_callbacks((HTTPCallbacks){
 		.failure=failed,
