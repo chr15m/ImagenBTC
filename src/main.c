@@ -23,14 +23,21 @@ PBL_APP_INFO(MY_UUID,
 
 Window window;
 BmpContainer background_image_container;
+bool requesting;
 
 TextLayer info_layer;
 GFont info_font;
-static char info_text[] = "pebble                                  ";
+static char info_text[] = "pebble                  ";
 
 TextLayer date_layer;
 GFont date_font;
 static char date_text[] = "                    ";
+
+TextLayer notify_layer;
+GFont notify_font;
+static char notify_text[] = "                    ";
+
+static char window_name[] = "PBBL BTC";
 
 void draw_date(){
 	PblTm t;
@@ -41,8 +48,17 @@ void draw_date(){
 }
 
 void draw_info(char *info) {
+	// if the total has updated, vibrate
+	if (strncmp(info_text, info, 24) && strncmp("pebble", info, 6)) {
+		vibes_double_pulse();
+	}
 	strcpy(info_text, info);
 	text_layer_set_text(&info_layer, info_text);
+}
+
+void draw_notify(char *notify) {
+	strcpy(notify_text, notify);
+	text_layer_set_text(&notify_layer, notify_text);
 }
 
 void clear() {
@@ -52,38 +68,39 @@ void clear() {
 }
 
 void set_timer(AppContextRef ctx) {
-	app_timer_send_event(ctx, 30000, 1);
+	// every X * 1000 seconds
+	app_timer_send_event(ctx, 25000, 1);
 }
 
 /***** HTTP stuff *****/
 
-void request_weather() {
-	// Build the HTTP request
-	DictionaryIterator *body;
-	HTTPResult result = http_out_get(URL, BTC_HTTP_COOKIE, &body);
-	if(result != HTTP_OK) {
-		// draw_info("!HTTP_OK");
-		// weather_layer_set_icon(&weather_layer, WEATHER_ICON_NO_WEATHER);
-		//clear();
-		#if DEBUG
-		draw_info("HTTP setup failed");
-		#endif
-		return;
-	}
-	dict_write_cstring(body, BTC_KEY_ADDRESS, ADDRESS);
-	// Send it.
-	if(http_out_send() != HTTP_OK) {
-		// draw_info("!HTTP_OK2");
-		// weather_layer_set_icon(&weather_layer, WEATHER_ICON_NO_WEATHER);
-		//clear();
-		#if DEBUG
-		draw_info("HTTP send failed");
-		#endif
-		return;
+void request_total() {
+	if (!requesting) {
+		requesting = true;
+		draw_notify("...");
+		// Build the HTTP request
+		DictionaryIterator *body;
+		HTTPResult result = http_out_get(URL, BTC_HTTP_COOKIE, &body);
+		if(result != HTTP_OK) {
+			#if DEBUG
+			draw_info("HTTP setup failed");
+			#endif
+			return;
+		}
+		dict_write_cstring(body, BTC_KEY_ADDRESS, ADDRESS);
+		// Send it.
+		if(http_out_send() != HTTP_OK) {
+			#if DEBUG
+			draw_info("HTTP send failed");
+			#endif
+			return;
+		}
 	}
 }
 
 void failed(int32_t cookie, int http_status, void* context) {
+	requesting = false;
+	draw_notify(" ");
 	if (cookie == 0) {
 		#if DEBUG
 		draw_info("HTTP fail 0 cookie");
@@ -99,6 +116,8 @@ void failed(int32_t cookie, int http_status, void* context) {
 }
 
 void success(int32_t cookie, int http_status, DictionaryIterator* received, void* context) {
+	requesting = false;
+	draw_notify(" ");
 	#if DEBUG
 	draw_info("HTTP success");
 	#endif
@@ -116,21 +135,23 @@ void success(int32_t cookie, int http_status, DictionaryIterator* received, void
 }
 
 void reconnect(void* context) {
+	requesting = false;
+	draw_notify(" ");
 	#if DEBUG
 	draw_info("reconnected");
 	#endif
-	request_weather();
+	request_total();
 }
 
 void handle_timer(AppContextRef ctx, AppTimerHandle handle, uint32_t cookie) {
-	request_weather();
-	// Update again every minute.
+	request_total();
+	// Update again
 	if (cookie)
 		set_timer(ctx);
 }
 
 void handle_init(AppContextRef ctx) {
-	window_init(&window, "PBBL BTC");
+	window_init(&window, window_name);
 	window_stack_push(&window, true /* Animated */);
 	window_set_fullscreen(&window, true);
 
@@ -147,6 +168,15 @@ void handle_init(AppContextRef ctx) {
 	layer_add_child(&window.layer, &info_layer.layer);
 	draw_info("pebble");
 
+	notify_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_10));
+	text_layer_init(&notify_layer, GRect(32, 13, 80, 32));
+	text_layer_set_text_alignment(&notify_layer, GTextAlignmentCenter);
+	text_layer_set_text_color(&notify_layer, GColorBlack);
+	text_layer_set_background_color(&notify_layer, GColorClear);
+	text_layer_set_font(&notify_layer, notify_font);
+	layer_add_child(&window.layer, &notify_layer.layer);
+	draw_notify(" ");
+	
 	date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SNAP_10));
 	text_layer_init(&date_layer, GRect(10, 146, 120, 20));
 	text_layer_set_text_alignment(&date_layer, GTextAlignmentCenter);
@@ -162,10 +192,10 @@ void handle_init(AppContextRef ctx) {
 		.reconnect=reconnect,
 	}, (void*)ctx);
 	
-	// set up our timer to check the weather every fifteen minutes
+	// set up our timer to check the total frequently
+	requesting = false;
 	set_timer((AppContextRef)ctx);
-	// initiate the first weather request
-	request_weather();
+	request_total();
 }
 
 void handle_deinit(AppContextRef ctx) {
@@ -174,13 +204,13 @@ void handle_deinit(AppContextRef ctx) {
 	bmp_deinit_container(&background_image_container);
 	fonts_unload_custom_font(date_font);
 	fonts_unload_custom_font(info_font);
+	fonts_unload_custom_font(notify_font);
 }
 
 void handle_tick(AppContextRef ctx, PebbleTickEvent *t){
 	(void)t;
 	(void)ctx;
-	if(t->tick_time->tm_sec%10==0) {
-		// layer_mark_dirty(&minute_display_layer);
+	if(t->tick_time->tm_sec % 10 == 0) {
 		draw_date();
 	}
 }
@@ -197,7 +227,7 @@ void pbl_main(void *params) {
 		.messaging_info = {
 			.buffer_sizes = {
 				.inbound = 124,
-				.outbound = 256,
+				.outbound = 124,
 			}
 		}
 	};
